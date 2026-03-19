@@ -1,0 +1,7 @@
+spring:
+  security:
+    jwt:
+      secret-key: ${SPRING_SECURITY_JWT_SECRET_KEY}
+      expiration: ${SPRING_SECURITY_JWT_EXPIRATION}
+      refresh:
+        expiration: ${SPRING_SECURITY_JWT_REFRESH_EXPIRATION}
