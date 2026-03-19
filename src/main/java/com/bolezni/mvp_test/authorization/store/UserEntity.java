@@ -2,14 +2,12 @@ package com.bolezni.mvp_test.authorization.store;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor
