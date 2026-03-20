@@ -12,11 +12,17 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Slf4j
 @Component
 public class JwtProvider {
+
+    public static final String CLAIM_TOKEN_TYPE = "typ";
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
 
     @Value("${spring.security.jwt.secret-key}")
     private String secret;
@@ -28,11 +34,11 @@ public class JwtProvider {
     private long refreshExpiration;
 
     public String buildRefreshToken(UserDetails userDetails) {
-        return buildToken(userDetails, refreshExpiration);
+        return buildToken(userDetails, refreshExpiration, TOKEN_TYPE_REFRESH);
     }
 
     public String buildToken(UserDetails userDetails) {
-        return buildToken(userDetails, jwtExpiration);
+        return buildToken(userDetails, jwtExpiration, TOKEN_TYPE_ACCESS);
     }
 
     public boolean isValidToken(String token, UserDetails userDetails) {
@@ -44,34 +50,18 @@ public class JwtProvider {
         return extractClaim(Claims::getSubject, token);
     }
 
-    private boolean isValid(String token) {
-        try {
-            log.debug("🔐 Validating JWT token: {}", token.substring(0, Math.min(20, token.length())) + "...");
-
-            Claims claims = Jwts.parser()
-                    .verifyWith(getSecretKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
-            log.debug("🔐 Token validated successfully for user: {}", claims.getSubject());
-            return true;
-
-        } catch (JwtException e) {
-            log.error("🔐 JWT validation failed: {}", e.getMessage());
-            return false;
-        } catch (IllegalArgumentException e) {
-            log.error("🔐 JWT token is null or empty");
-            return false;
-        } catch (Exception e) {
-            log.error("🔐 Unexpected error during token validation: {}", e.getMessage());
-            return false;
-        }
+    public String extractTokenType(String token) {
+        return extractClaim(c -> c.get(CLAIM_TOKEN_TYPE, String.class), token);
     }
 
-    private String buildToken(UserDetails userDetails, long expiration) {
+    public Date extractExpiration(String token) {
+        return extractClaim(Claims::getExpiration, token);
+    }
+
+    private String buildToken(UserDetails userDetails, long expiration, String tokenType) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .claims(Map.of(CLAIM_TOKEN_TYPE, tokenType, Claims.ID, UUID.randomUUID().toString()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getSecretKey(), Jwts.SIG.HS256)
