@@ -1,0 +1,9 @@
+### Запрос на регистрацию
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "yurchenkods05@gmail.com",
+  "password": "12345",
+  "passwordConfirmation": "12345"
+}
