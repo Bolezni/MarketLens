@@ -17,3 +17,7 @@ spring:
     show-sql: true
   config:
     import: optional:file:.env[.properties]
+
+app:
+  verification:
+    base-url: ${APP_VERIFICATION_BASE_URL:http://localhost:8080/api/auth/verify-email}

@@ -24,4 +24,9 @@ public record CustomUserDetails(UserEntity userEntity) implements UserDetails {
     public String getUsername() {
         return userEntity.getEmail();
     }
+
+    @Override
+    public boolean isEnabled() {
+        return userEntity.isEmailVerified();
+    }
 }

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,8 @@ public class BaseAuthorizationService implements AuthorizationService {
             return new AuthResponse(jwt, "Bearer", refreshToken);
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials", e);
+        } catch (DisabledException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email is not verified", e);
         }
     }
 

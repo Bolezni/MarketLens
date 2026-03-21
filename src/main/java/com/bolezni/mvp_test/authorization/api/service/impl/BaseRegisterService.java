@@ -2,6 +2,7 @@ package com.bolezni.mvp_test.authorization.api.service.impl;
 
 import com.bolezni.mvp_test.authorization.api.dto.RegisterRequest;
 import com.bolezni.mvp_test.authorization.api.dto.RegisterResponse;
+import com.bolezni.mvp_test.authorization.api.service.EmailVerificationService;
 import com.bolezni.mvp_test.authorization.api.service.RegisterService;
 import com.bolezni.mvp_test.authorization.store.UserEntity;
 import com.bolezni.mvp_test.authorization.store.UserRepository;
@@ -23,6 +24,7 @@ public class BaseRegisterService implements RegisterService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
 
     @Override
     @Transactional
@@ -48,6 +50,8 @@ public class BaseRegisterService implements RegisterService {
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists", e);
         }
+
+        emailVerificationService.createAndSendVerification(user);
 
         return new RegisterResponse("create new user");
     }
