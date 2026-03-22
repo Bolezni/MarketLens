@@ -1,16 +1,13 @@
 package com.bolezni.mvp_test.authorization.api.controller;
 
-import com.bolezni.mvp_test.authorization.api.dto.AuthRequest;
-import com.bolezni.mvp_test.authorization.api.dto.AuthResponse;
-import com.bolezni.mvp_test.authorization.api.dto.MessageResponse;
+import com.bolezni.mvp_test.authorization.api.dto.*;
 import com.bolezni.mvp_test.authorization.api.service.AuthorizationService;
-import com.bolezni.mvp_test.authorization.api.dto.RefreshRequest;
-import com.bolezni.mvp_test.authorization.api.dto.ResendVerificationRequest;
-import com.bolezni.mvp_test.authorization.api.dto.VerifyEmailRequest;
 import com.bolezni.mvp_test.authorization.api.service.EmailVerificationService;
 import com.bolezni.mvp_test.authorization.api.service.RefreshService;
+import com.bolezni.mvp_test.authorization.api.service.RegisterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +22,7 @@ public class AuthenticationController {
     private final AuthorizationService authorizationService;
     private final RefreshService refreshService;
     private final EmailVerificationService emailVerificationService;
+    private final RegisterService registerService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
@@ -48,5 +46,11 @@ public class AuthenticationController {
     public ResponseEntity<MessageResponse> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         emailVerificationService.resend(request.email());
         return ResponseEntity.ok(new MessageResponse("If account exists, verification email was sent"));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        RegisterResponse registerResponse = registerService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(registerResponse);
     }
 }
