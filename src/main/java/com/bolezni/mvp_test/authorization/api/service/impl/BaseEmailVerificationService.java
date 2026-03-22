@@ -1,5 +1,6 @@
 package com.bolezni.mvp_test.authorization.api.service.impl;
 
+import com.bolezni.mvp_test.authorization.api.service.EmailSender;
 import com.bolezni.mvp_test.authorization.api.service.EmailVerificationService;
 import com.bolezni.mvp_test.authorization.store.EmailVerificationTokenEntity;
 import com.bolezni.mvp_test.authorization.store.EmailVerificationTokenRepository;
