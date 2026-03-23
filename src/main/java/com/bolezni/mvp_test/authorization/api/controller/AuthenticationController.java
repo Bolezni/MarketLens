@@ -3,6 +3,7 @@ package com.bolezni.mvp_test.authorization.api.controller;
 import com.bolezni.mvp_test.authorization.api.dto.*;
 import com.bolezni.mvp_test.authorization.api.service.AuthorizationService;
 import com.bolezni.mvp_test.authorization.api.service.EmailVerificationService;
+import com.bolezni.mvp_test.authorization.api.service.PasswordResetService;
 import com.bolezni.mvp_test.authorization.api.service.RefreshService;
 import com.bolezni.mvp_test.authorization.api.service.RegisterService;
 import jakarta.validation.Valid;
@@ -23,6 +24,7 @@ public class AuthenticationController {
     private final RefreshService refreshService;
     private final EmailVerificationService emailVerificationService;
     private final RegisterService registerService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
@@ -45,6 +47,16 @@ public class AuthenticationController {
     public ResponseEntity<MessageResponse> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         emailVerificationService.resend(request.email());
         return ResponseEntity.ok(new MessageResponse("If account exists, verification email was sent"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(passwordResetService.forgot(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(passwordResetService.reset(request));
     }
 
     @PostMapping("/register")

@@ -18,6 +18,23 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_PROPERTIES_SMTP_AUTH}
+          starttls:
+            enable: ${MAIL_PROPERTIES_SMTP_AUTH_STARTTLS}
+
+
 app:
   verification:
-    base-url: ${APP_VERIFICATION_BASE_URL:http://localhost:8080/api/auth/verify-email}
+    base-url: ${APP_VERIFICATION_BASE_URL}
+  password-reset:
+    ui-base-url: ${APP_PASSWORD_RESET_UI_BASE_URL}
+  mail:
+    type: ${APP_MAIL_TYPE}
