@@ -1,5 +1,6 @@
 package com.bolezni.mvp_test.authorization.api.service.impl;
 
+import com.bolezni.mvp_test.authorization.api.service.PasswordResetEmailSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

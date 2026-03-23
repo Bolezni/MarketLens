@@ -3,6 +3,7 @@ package com.bolezni.mvp_test.authorization.api.service.impl;
 import com.bolezni.mvp_test.authorization.api.dto.ForgotPasswordRequest;
 import com.bolezni.mvp_test.authorization.api.dto.MessageResponse;
 import com.bolezni.mvp_test.authorization.api.dto.ResetPasswordRequest;
+import com.bolezni.mvp_test.authorization.api.service.PasswordResetEmailSender;
 import com.bolezni.mvp_test.authorization.api.service.PasswordResetService;
 import com.bolezni.mvp_test.authorization.store.PasswordResetTokenEntity;
 import com.bolezni.mvp_test.authorization.store.PasswordResetTokenRepository;
