@@ -3,6 +3,7 @@ package com.bolezni.mvp_test.authorization.api.service.impl;
 import com.bolezni.mvp_test.authorization.api.dto.AuthRequest;
 import com.bolezni.mvp_test.authorization.api.dto.AuthResponse;
 import com.bolezni.mvp_test.authorization.api.security.CustomUserDetails;
+import com.bolezni.mvp_test.authorization.api.security.bruteforce.LoginBruteForceService;
 import com.bolezni.mvp_test.authorization.api.security.jwt.JwtProvider;
 import com.bolezni.mvp_test.authorization.api.service.AuthorizationService;
 import com.bolezni.mvp_test.authorization.store.RefreshTokenEntity;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.OptionalLong;
 
 @Service
 @RequiredArgsConstructor
@@ -31,15 +33,28 @@ public class BaseAuthorizationService implements AuthorizationService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final LoginBruteForceService loginBruteForceService;
 
     @Override
     public AuthResponse authorize(AuthRequest authRequest) {
         String email = authRequest.email().trim().toLowerCase(Locale.ROOT);
+
+        OptionalLong retryAfterSeconds = loginBruteForceService.checkBlocked(email);
+        if (retryAfterSeconds.isPresent()) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "Too many failed login attempts. Try again in " + retryAfterSeconds.getAsLong() + " seconds"
+            );
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, authRequest.password())
             );
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            loginBruteForceService.onSuccess(email);
+
             String jwt = jwtProvider.buildToken(userDetails);
             String refreshToken = jwtProvider.buildRefreshToken(userDetails);
 
@@ -53,6 +68,14 @@ public class BaseAuthorizationService implements AuthorizationService {
 
             return new AuthResponse(jwt, "Bearer", refreshToken);
         } catch (BadCredentialsException e) {
+            OptionalLong lockedAfterFailure = loginBruteForceService.onFailure(email);
+            if (lockedAfterFailure.isPresent()) {
+                throw new ResponseStatusException(
+                        HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many failed login attempts. Try again in " + lockedAfterFailure.getAsLong() + " seconds",
+                        e
+                );
+            }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials", e);
         } catch (DisabledException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email is not verified", e);
