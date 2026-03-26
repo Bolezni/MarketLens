@@ -1,6 +1,8 @@
 package com.bolezni.mvp_test.authorization.api.security.jwt;
 
+import com.bolezni.mvp_test.authorization.api.security.CustomUserDetails;
 import com.bolezni.mvp_test.authorization.api.security.CustomUserDetailsService;
+import com.bolezni.mvp_test.authorization.store.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.OptionalInt;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,17 +47,26 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final String token = authorizationHeader.substring(7);
 
+
+
         try {
             String email = jwtProvider.extractEmail(token);
             log.debug("Authenticating user with email: {}", email);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
                 log.debug("Loaded user details for: {}", email);
-
 
                 if (jwtProvider.isValidToken(token, userDetails)) {
                     log.debug("Token is valid for user: {}", email);
+
+                    int tokenVersion = jwtProvider.extractTokenVersion(token);
+                    int currentTokenVersion = userDetails.userEntity().getTokenVersion();
+
+                    if(currentTokenVersion != tokenVersion) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Token invalidated");
+                        return;
+                    }
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

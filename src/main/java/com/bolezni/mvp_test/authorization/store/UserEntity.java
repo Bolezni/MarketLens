@@ -31,6 +31,9 @@ public class UserEntity {
 
     private String plan;
 
+    @Column(nullable = false, columnDefinition = "int default 0", name = "token_version")
+    private int tokenVersion;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;

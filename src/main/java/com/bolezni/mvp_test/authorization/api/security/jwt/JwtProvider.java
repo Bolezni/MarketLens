@@ -1,6 +1,8 @@
 package com.bolezni.mvp_test.authorization.api.security.jwt;
 
+import com.bolezni.mvp_test.authorization.api.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -23,6 +25,7 @@ public class JwtProvider {
     public static final String CLAIM_TOKEN_TYPE = "typ";
     public static final String TOKEN_TYPE_ACCESS = "access";
     public static final String TOKEN_TYPE_REFRESH = "refresh";
+    public static final String TOKEN_VERSION = "tokenVersion";
 
     @Value("${spring.security.jwt.secret-key}")
     private String secret;
@@ -43,7 +46,7 @@ public class JwtProvider {
 
     public boolean isValidToken(String token, UserDetails userDetails) {
         final String email = extractEmail(token);
-        return (email.equalsIgnoreCase(userDetails.getUsername()) && !isTokenExpired(token));
+        return (email.equalsIgnoreCase(userDetails.getUsername()) && isTokenExpired(token));
     }
 
     public String extractEmail(String token) {
@@ -58,10 +61,19 @@ public class JwtProvider {
         return extractClaim(Claims::getExpiration, token);
     }
 
+    public int extractTokenVersion(String token) {
+        return extractClaim(c -> c.get(TOKEN_VERSION, Integer.class), token);
+    }
+
     private String buildToken(UserDetails userDetails, long expiration, String tokenType) {
+        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
+        int tokenVersion = customUserDetails.userEntity().getTokenVersion();
+
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .claims(Map.of(CLAIM_TOKEN_TYPE, tokenType, Claims.ID, UUID.randomUUID().toString()))
+                .claims(Map.of(CLAIM_TOKEN_TYPE, tokenType,
+                        Claims.ID, UUID.randomUUID().toString(),
+                        TOKEN_VERSION, tokenVersion))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .signWith(getSecretKey(), Jwts.SIG.HS256)
@@ -69,8 +81,14 @@ public class JwtProvider {
     }
 
 
-    private boolean isTokenExpired(String token) {
-        return getExpiration(token).before(new Date());
+    public boolean isTokenExpired(String token) {
+        try {
+            return getExpiration(token).before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true; // Токен истёк — это и есть ответ
+        } catch (JwtException e) {
+            return true; // Невалидный токен считаем истёкшим
+        }
     }
 
 
