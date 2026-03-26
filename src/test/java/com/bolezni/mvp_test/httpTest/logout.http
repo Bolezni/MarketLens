@@ -1,0 +1,7 @@
+###Выход со всех устройств
+POST http://localhost:8080/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ5dXJjaGVua29kczA1QGdtYWlsLmNvbSIsInRva2VuVmVyc2lvbiI6MSwidHlwIjoicmVmcmVzaCIsImp0aSI6ImZkZGNlYTllLTQyNDYtNDc1MS05ZTQ3LWE2MTE5ZjQzYmIwZSIsImV4cCI6MTc3NzEzNTEyNiwiaWF0IjoxNzc0NTQzMTI2fQ.pAo9mQb5G2_c_mA8Rw_OlPiIIF27AHKdWaP0efYB1F4"
+}

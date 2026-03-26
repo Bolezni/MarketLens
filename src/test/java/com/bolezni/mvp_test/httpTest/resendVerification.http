@@ -1,0 +1,7 @@
+### Отправить новый код подтверждения почты
+POST http://localhost:8080/api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "yurchenkods05@gmail.com"
+}

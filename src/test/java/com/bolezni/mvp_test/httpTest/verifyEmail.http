@@ -1,0 +1,7 @@
+### Подтверждение почты
+POST http://localhost:8080/api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "8F0ztk67svlExcUmUAqEneUgRFnwEYZtPUAIkGalcaE"
+}
