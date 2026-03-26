@@ -1,11 +1,7 @@
 package com.bolezni.mvp_test.authorization.api.controller;
 
 import com.bolezni.mvp_test.authorization.api.dto.*;
-import com.bolezni.mvp_test.authorization.api.service.AuthorizationService;
-import com.bolezni.mvp_test.authorization.api.service.EmailVerificationService;
-import com.bolezni.mvp_test.authorization.api.service.PasswordResetService;
-import com.bolezni.mvp_test.authorization.api.service.RefreshService;
-import com.bolezni.mvp_test.authorization.api.service.RegisterService;
+import com.bolezni.mvp_test.authorization.api.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +21,7 @@ public class AuthenticationController {
     private final EmailVerificationService emailVerificationService;
     private final RegisterService registerService;
     private final PasswordResetService passwordResetService;
+    private final LogoutService logoutService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
@@ -63,5 +60,11 @@ public class AuthenticationController {
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
         RegisterResponse registerResponse = registerService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(registerResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
+        logoutService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 }

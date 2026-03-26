@@ -39,43 +39,10 @@ public class BaseRefreshService implements RefreshService {
 
         String refreshToken = request.refreshToken().trim();
 
-        String tokenType;
-        try {
-            tokenType = jwtProvider.extractTokenType(refreshToken);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e);
-        }
-
-        if (!JwtProvider.TOKEN_TYPE_REFRESH.equals(tokenType)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
-        }
-
-        LocalDateTime expiresAt;
-        try {
-            expiresAt = LocalDateTime.ofInstant(
-                    jwtProvider.extractExpiration(refreshToken).toInstant(),
-                    ZoneId.systemDefault()
-            );
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e);
-        }
-
-        if (expiresAt.isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
-        }
+        validateRefreshToken(refreshToken);
 
         String tokenHash = sha256Hex(refreshToken);
-        RefreshTokenEntity current = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
-
-        if (current.getRevokedAt() != null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token revoked");
-        }
-
-        // дополнительно защищаемся от несостыковки в БД (если токен уже просрочен по записи)
-        if (current.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
-        }
+        RefreshTokenEntity current = getRefreshTokenByTokenHash(tokenHash);
 
         String email = jwtProvider.extractEmail(refreshToken).trim().toLowerCase(Locale.ROOT);
         UserEntity user = current.getUser();
@@ -100,6 +67,51 @@ public class BaseRefreshService implements RefreshService {
         refreshTokenRepository.save(current);
 
         return new AuthResponse(newAccess, "Bearer", newRefresh);
+    }
+
+    @Override
+    public RefreshTokenEntity getRefreshTokenByTokenHash(String tokenHash) {
+        RefreshTokenEntity current = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
+
+        if (current.getRevokedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token revoked");
+        }
+
+        // дополнительно защищаемся от несостыковки в БД (если токен уже просрочен по записи)
+        if (current.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
+        }
+
+        return current;
+    }
+
+    @Override
+    public void validateRefreshToken(String refreshToken) {
+        String tokenType;
+        try {
+            tokenType = jwtProvider.extractTokenType(refreshToken);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e);
+        }
+
+        if (!JwtProvider.TOKEN_TYPE_REFRESH.equals(tokenType)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        }
+
+        LocalDateTime expiresAt;
+        try {
+            expiresAt = LocalDateTime.ofInstant(
+                    jwtProvider.extractExpiration(refreshToken).toInstant(),
+                    ZoneId.systemDefault()
+            );
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e);
+        }
+
+        if (expiresAt.isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
+        }
     }
 
     private static String sha256Hex(String value) {
